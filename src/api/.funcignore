@@ -1,6 +1,5 @@
 # Pastas e arquivos para ignorar no deploy
 node_modules/
-src/
 *.ts
 *.js.map
 .vscode/
@@ -15,3 +14,7 @@ coverage/
 .nyc_output/
 docs/
 documentation/
+app.js
+app.js.backup
+app_minimal.js
+app_simple.js

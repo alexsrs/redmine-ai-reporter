@@ -2,7 +2,6 @@ import { DefaultAzureCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 import { TableClient } from "@azure/data-tables";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { AzureConfig } from "./types";
 
 class ConfigService {
   private static instance: ConfigService;
@@ -92,3 +91,11 @@ class ConfigService {
 }
 
 export default ConfigService;
+
+export interface AzureConfig {
+  openAiEndpoint: string;
+  openAiApiKey: string;
+  storageConnectionString: string;
+  keyVaultUri: string;
+  applicationInsightsConnectionString: string;
+}

@@ -205,7 +205,7 @@ resource "azurerm_windows_function_app" "main" {
     "WEBSITE_RUN_FROM_PACKAGE"              = "1"
     "SCM_DO_BUILD_DURING_DEPLOYMENT"        = "false"
     "ENABLE_ORYX_BUILD"                     = "false"
-    "AzureWebJobsStorage__accountName"      = azurerm_storage_account.main.name
+    "AzureWebJobsStorage"                   = azurerm_storage_account.main.primary_connection_string
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
     "AZURE_CLIENT_ID"                       = azurerm_user_assigned_identity.main.client_id
     "KEY_VAULT_URI"                         = azurerm_key_vault.main.vault_uri

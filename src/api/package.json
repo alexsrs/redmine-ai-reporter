@@ -2,7 +2,6 @@
   "name": "redmine-ai-reporter-api",
   "version": "1.0.0",
   "description": "API Backend para o Redmine AI Reporter usando Azure Functions",
-  "main": "app.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -12,23 +11,24 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
+    "@azure/data-tables": "^13.2.2",
     "@azure/functions": "^4.5.1",
     "@azure/identity": "^4.2.1",
     "@azure/keyvault-secrets": "^4.8.0",
     "@azure/storage-blob": "^12.24.0",
-    "@azure/data-tables": "^13.2.2",
     "axios": "^1.7.2",
-    "multer": "^1.4.5-lts.1",
     "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1",
+    "parse-multipart": "^1.0.4",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "azure-functions-core-tools": "^4.0.5455",
     "@types/multer": "^1.4.11",
-    "@types/uuid": "^10.0.0",
     "@types/node": "^20.14.9",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^7.15.0",
     "@typescript-eslint/parser": "^7.15.0",
+    "azure-functions-core-tools": "^4.0.5455",
     "eslint": "^8.57.0",
     "typescript": "^5.5.3"
   }

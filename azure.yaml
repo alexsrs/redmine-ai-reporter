@@ -11,7 +11,6 @@ metadata:
 services:
   frontend:
     project: ./src/frontend
-    dist: dist
     language: js
     host: staticwebapp
 
