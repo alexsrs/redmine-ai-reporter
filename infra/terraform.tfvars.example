@@ -1,0 +1,11 @@
+# Terraform variables file for different environments
+# Copy this file to terraform.tfvars and customize the values
+
+# Required variables
+resource_group_name = "rg-redmine-ai-reporter-dev"
+
+# Optional variables (uncomment and modify as needed)
+environment_name = "dev"
+location         = "East US"
+resource_prefix  = "redmine-ai"
+app_name         = "redmine-ai-reporter"

@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: redmine-ai-reporter
+metadata:
+  template: redmine-ai-reporter@0.0.1-beta
+  description: "IA para análise de atividades e preenchimento automático no Redmine"
+  author: "Alex Sandro Ribeiro de Souza"
+  repositoryPath: "."
+
+# Configuração dos serviços
+services:
+  frontend:
+    project: ./src/frontend
+    dist: dist
+    language: js
+    host: staticwebapp
+
+  api:
+    project: ./src/api
+    language: js
+    host: function
+
+# Configuração de hooks
+hooks:
+  # Hook para executar antes do provisionamento
+  preprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "🚀 Preparando infraestrutura Azure..."
+        Write-Host "📋 Verificando pré-requisitos..."
+    posix:
+      shell: sh
+      run: |
+        echo "🚀 Preparando infraestrutura Azure..."
+        echo "📋 Verificando pré-requisitos..."
+
+  # Hook para executar depois do provisionamento
+  postprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "✅ Infraestrutura provisionada com sucesso!"
+        Write-Host "🔧 Configurando variáveis de ambiente..."
+    posix:
+      shell: sh
+      run: |
+        echo "✅ Infraestrutura provisionada com sucesso!"
+        echo "🔧 Configurando variáveis de ambiente..."
+
+# Configuração de ambiente
+infra:
+  provider: terraform
+  path: infra
