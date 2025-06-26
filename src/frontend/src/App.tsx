@@ -103,9 +103,9 @@ function App() {
             <div className="flex justify-center items-center mb-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                <img 
-                  src={aiLogo} 
-                  alt="Redmine AI Reporter Logo" 
+                <img
+                  src={aiLogo}
+                  alt="Redmine AI Reporter Logo"
                   className="relative w-24 h-24 object-contain mx-auto drop-shadow-2xl float-animation hover:scale-110 transition-transform duration-300 cursor-pointer"
                 />
                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-pulse">
@@ -113,17 +113,18 @@ function App() {
                 </div>
               </div>
             </div>
-            
+
             <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Redmine AI Reporter - Patrick
             </h1>
             <p className="mt-2 text-lg text-gray-600">
-              🤖 IA para análise de atividades e preenchimento automático no Redmine
+              🤖 IA para análise de atividades e preenchimento automático no
+              Redmine
             </p>
             <p className="mt-1 text-sm text-gray-500">
               ⚡ Desenvolvido por @alexsrs | 🚀 Powered by Azure AI
             </p>
-            
+
             {/* Badge de Status */}
             <div className="mt-3 flex justify-center">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
