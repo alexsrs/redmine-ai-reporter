@@ -48,7 +48,7 @@ locals {
   }
 
   resource_names = {
-    storage_account  = "${var.resource_prefix}${local.resource_token}st"
+    storage_account  = "redmineai${local.resource_token}st"  # No hífens para Storage Account
     static_web_app   = "${var.resource_prefix}-${local.resource_token}-swa"
     function_app     = "${var.resource_prefix}-${local.resource_token}-func"
     app_service_plan = "${var.resource_prefix}-${local.resource_token}-asp"
@@ -202,10 +202,15 @@ resource "azurerm_windows_function_app" "main" {
     "FUNCTIONS_EXTENSION_VERSION"           = "~4"
     "FUNCTIONS_WORKER_RUNTIME"              = "node"
     "WEBSITE_NODE_DEFAULT_VERSION"          = "~20"
+    "WEBSITE_RUN_FROM_PACKAGE"              = "1"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT"        = "false"
+    "ENABLE_ORYX_BUILD"                     = "false"
     "AzureWebJobsStorage__accountName"      = azurerm_storage_account.main.name
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
     "AZURE_CLIENT_ID"                       = azurerm_user_assigned_identity.main.client_id
     "KEY_VAULT_URI"                         = azurerm_key_vault.main.vault_uri
+    "AZURE_OPENAI_ENDPOINT"                 = azurerm_cognitive_account.openai.endpoint
+    "AZURE_OPENAI_MODEL"                    = azurerm_cognitive_deployment.gpt_model.name
   }
 
   tags = merge(local.tags, {
@@ -260,4 +265,65 @@ resource "azurerm_role_assignment" "monitoring_metrics_publisher" {
   scope              = azurerm_application_insights.main.id
   role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/3913510d-42f4-4e42-8a64-420c390055eb"
   principal_id       = azurerm_user_assigned_identity.main.principal_id
+}
+
+# Azure OpenAI Service
+resource "azurerm_cognitive_account" "openai" {
+  name                = "redmine-ai-${random_string.resource_token.result}-openai"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  kind                = "OpenAI"
+
+  sku_name = "S0"
+
+  custom_subdomain_name = "redmine-ai-${random_string.resource_token.result}-openai"
+  public_network_access_enabled = true
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = local.tags
+}
+
+# OpenAI Deployment - GPT-4o-mini (mais barato)
+resource "azurerm_cognitive_deployment" "gpt_model" {
+  name                 = "gpt-4o-mini"
+  cognitive_account_id = azurerm_cognitive_account.openai.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-4o-mini"
+    version = "2024-07-18"
+  }
+
+  scale {
+    type = "Standard"
+  }
+
+  depends_on = [azurerm_cognitive_account.openai]
+}
+
+# Role assignment for Managed Identity to access OpenAI
+resource "azurerm_role_assignment" "openai_user" {
+  scope              = azurerm_cognitive_account.openai.id
+  role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/5e0bd9bd-7b93-4f28-af87-19fc36ad61bd"
+  principal_id       = azurerm_user_assigned_identity.main.principal_id
+}
+
+# Add OpenAI secrets to Key Vault
+resource "azurerm_key_vault_secret" "openai_endpoint" {
+  name         = "AZURE-OPENAI-ENDPOINT"
+  value        = azurerm_cognitive_account.openai.endpoint
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_key_vault_access_policy.managed_identity]
+}
+
+resource "azurerm_key_vault_secret" "openai_model" {
+  name         = "AZURE-OPENAI-MODEL"
+  value        = azurerm_cognitive_deployment.gpt_model.name
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_key_vault_access_policy.managed_identity]
 }

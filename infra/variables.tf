@@ -9,7 +9,7 @@ variable "environment_name" {
 variable "location" {
   description = "Localização dos recursos Azure"
   type        = string
-  default     = "East US"
+  default     = "East US 2"  # East US 2 é suportado pelo Static Web App
 }
 
 variable "resource_prefix" {

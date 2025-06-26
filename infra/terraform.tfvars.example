@@ -6,6 +6,6 @@ resource_group_name = "rg-redmine-ai-reporter-dev"
 
 # Optional variables (uncomment and modify as needed)
 environment_name = "dev"
-location         = "East US"
+location         = "East US 2"  # East US 2 suporta Static Web Apps
 resource_prefix  = "redmine-ai"
 app_name         = "redmine-ai-reporter"

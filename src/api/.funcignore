@@ -1,0 +1,17 @@
+# Pastas e arquivos para ignorar no deploy
+node_modules/
+src/
+*.ts
+*.js.map
+.vscode/
+.git/
+.env*
+*.log
+test/
+tests/
+*.test.*
+*.spec.*
+coverage/
+.nyc_output/
+docs/
+documentation/

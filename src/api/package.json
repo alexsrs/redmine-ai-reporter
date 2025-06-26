@@ -2,6 +2,7 @@
   "name": "redmine-ai-reporter-api",
   "version": "1.0.0",
   "description": "API Backend para o Redmine AI Reporter usando Azure Functions",
+  "main": "app.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",

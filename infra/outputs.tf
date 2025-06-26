@@ -82,3 +82,19 @@ output "AZURE_MANAGED_IDENTITY_CLIENT_ID" {
   description = "Client ID da Managed Identity"
   value       = azurerm_user_assigned_identity.main.client_id
 }
+
+# OpenAI outputs
+output "AZURE_OPENAI_NAME" {
+  description = "Nome do Azure OpenAI Service"
+  value       = azurerm_cognitive_account.openai.name
+}
+
+output "AZURE_OPENAI_ENDPOINT" {
+  description = "Endpoint do Azure OpenAI Service"
+  value       = azurerm_cognitive_account.openai.endpoint
+}
+
+output "AZURE_OPENAI_MODEL_DEPLOYMENT" {
+  description = "Nome do modelo deployado"
+  value       = azurerm_cognitive_deployment.gpt_model.name
+}
