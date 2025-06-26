@@ -44,16 +44,22 @@ Sistema inteligente que analisa descrições de atividades em linguagem natural 
 └─────────────┘ └─────────────┘ └─────────────┘
 ```
 
-### **Serviços Azure Utilizados (Tier Gratuito)**
+### **Serviços Azure Utilizados (💰 100% GRATUITO)**
 
-| Serviço                  | Propósito                | Tier                     |
-| ------------------------ | ------------------------ | ------------------------ |
-| **Static Web Apps**      | Frontend React           | Free                     |
-| **Azure Functions**      | API Backend              | Consumption (Free)       |
-| **Storage Account**      | Logs e evidências        | LRS (5GB Free)           |
-| **Key Vault**            | Gerenciamento de secrets | Standard (10k ops/month) |
-| **Application Insights** | Monitoramento            | Pay-as-you-go            |
-| **Azure OpenAI**         | Geração de relatórios    | Pay-per-use              |
+| Serviço                  | Propósito                | Tier                     | Custo Mensal     |
+| ------------------------ | ------------------------ | ------------------------ | ---------------- |
+| **Static Web Apps**      | Frontend React           | Free                     | **R$ 0,00**      |
+| **Azure Functions**      | API Backend              | Consumption (Free)       | **R$ 0,00\***    |
+| **Storage Account**      | Logs e evidências        | LRS (5GB Free)           | **R$ 0,00\***    |
+| **Key Vault**            | Gerenciamento de secrets | Standard (10k ops/month) | **R$ 0,00\***    |
+| **Application Insights** | Monitoramento            | 1GB/month free           | **R$ 0,00\***    |
+| **Log Analytics**        | Logs centralizados       | 5GB/month free           | **R$ 0,00\***    |
+| **Azure OpenAI**         | Geração de relatórios    | Pay-per-use              | ~R$ 5-10/mês\*\* |
+
+> \* _Dentro dos limites gratuitos para uso de desenvolvimento/demonstração_  
+> \*\* _Apenas Azure OpenAI tem custo, mas muito baixo para uso típico_
+
+📊 **[Ver detalhes completos dos recursos gratuitos](docs/AZURE_FREE_RESOURCES.md)**
 
 ## 🚀 **Deploy Rápido**
 

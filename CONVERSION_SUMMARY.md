@@ -182,4 +182,4 @@ O projeto agora utiliza **Terraform** como Infrastructure as Code, mantendo toda
 
 ---
 
-**🏆 Parabéns! Seu projeto agora é multi-cloud ready com Terraform! 🎯**
+**🏆 Parabéns! Esse projeto agora é multi-cloud ready com Terraform! 🎯**

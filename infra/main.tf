@@ -74,13 +74,14 @@ resource "azurerm_user_assigned_identity" "main" {
   tags                = local.tags
 }
 
-# 2. Log Analytics Workspace
+# 2. Log Analytics Workspace (Free tier: 5GB/month)
 resource "azurerm_log_analytics_workspace" "main" {
   name                = local.resource_names.log_analytics
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   sku                 = "PerGB2018"
-  retention_in_days   = 30
+  retention_in_days   = 30  # Minimum for free tier
+  daily_quota_gb      = 1   # Limit to prevent unexpected charges
   tags                = local.tags
 }
 
@@ -94,19 +95,26 @@ resource "azurerm_application_insights" "main" {
   tags                = local.tags
 }
 
-# 4. Storage Account
+# 4. Storage Account (Free tier: 5GB LRS)
 resource "azurerm_storage_account" "main" {
   name                     = local.resource_names.storage_account
   resource_group_name      = azurerm_resource_group.main.name
   location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
-  account_replication_type = "LRS"
+  account_replication_type = "LRS"  # Cheapest option
   account_kind             = "StorageV2"
   access_tier              = "Hot"
 
   https_traffic_only_enabled      = true
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
+
+  # Blob soft delete - free but can consume storage
+  blob_properties {
+    delete_retention_policy {
+      days = 7  # Minimum to avoid extra storage costs
+    }
+  }
 
   network_rules {
     default_action = "Allow"
@@ -115,16 +123,16 @@ resource "azurerm_storage_account" "main" {
   tags = local.tags
 }
 
-# 5. Key Vault
+# 5. Key Vault (Free tier: 10,000 transactions/month)
 resource "azurerm_key_vault" "main" {
   name                = local.resource_names.key_vault
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
-  sku_name            = "standard"
+  sku_name            = "standard"  # Free tier
 
-  soft_delete_retention_days = 7
-  purge_protection_enabled   = false
+  soft_delete_retention_days = 7   # Minimum allowed
+  purge_protection_enabled   = false  # Disable to avoid retention costs
 
   network_acls {
     default_action = "Allow"
@@ -146,13 +154,13 @@ resource "azurerm_key_vault_access_policy" "managed_identity" {
   ]
 }
 
-# 6. App Service Plan (Consumption)
+# 6. App Service Plan (Consumption - Free tier)
 resource "azurerm_service_plan" "main" {
   name                = local.resource_names.app_service_plan
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   os_type             = "Windows"
-  sku_name            = "Y1"
+  sku_name            = "Y1"  # Consumption plan - pay-per-execution, includes free executions
   tags                = local.tags
 }
 
@@ -211,12 +219,12 @@ resource "azurerm_windows_function_app" "main" {
   ]
 }
 
-# 8. Static Web App
+# 8. Static Web App (Free tier)
 resource "azurerm_static_web_app" "main" {
   name                = local.resource_names.static_web_app
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
-  sku_tier            = "Free"
+  sku_tier            = "Free"  # Free tier: 100GB bandwidth, custom domains
   sku_size            = "Free"
 
   tags = merge(local.tags, {
