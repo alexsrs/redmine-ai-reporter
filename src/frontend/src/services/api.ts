@@ -30,23 +30,19 @@ export const aiService = {
    * Gera sugestão de relatório baseada na atividade descrita
    */
   async generateSuggestion(input: ActivityInput): Promise<SuggestionResponse> {
-    const formData = new FormData();
-    formData.append("texto", input.texto);
+    console.log("Enviando para API:", { texto: input.texto });
+    console.log("URL da API:", API_BASE_URL);
 
-    if (input.arquivos) {
-      input.arquivos.forEach((arquivo, index) => {
-        formData.append(`arquivo_${index}`, arquivo);
-      });
-    }
+    // For now, send as JSON. File upload can be implemented later
+    const requestData = {
+      texto: input.texto,
+      // Note: File upload will be implemented in a separate endpoint
+      arquivos: input.arquivos ? input.arquivos.map((f) => f.name) : [],
+    };
 
     const response = await api.post<SuggestionResponse>(
       "/generate-suggestion",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      requestData
     );
 
     return response.data;
