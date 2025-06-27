@@ -154,6 +154,20 @@ resource "azurerm_key_vault_access_policy" "managed_identity" {
   ]
 }
 
+# Key Vault Access Policy for GitHub Actions Service Principal
+resource "azurerm_key_vault_access_policy" "github_actions" {
+  key_vault_id = azurerm_key_vault.main.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  secret_permissions = [
+    "Get",
+    "List",
+    "Set",
+    "Delete"
+  ]
+}
+
 # 6. App Service Plan (Consumption - Free tier)
 resource "azurerm_service_plan" "main" {
   name                = local.resource_names.app_service_plan
@@ -318,7 +332,10 @@ resource "azurerm_key_vault_secret" "openai_endpoint" {
   value        = azurerm_cognitive_account.openai.endpoint
   key_vault_id = azurerm_key_vault.main.id
 
-  depends_on = [azurerm_key_vault_access_policy.managed_identity]
+  depends_on = [
+    azurerm_key_vault_access_policy.managed_identity,
+    azurerm_key_vault_access_policy.github_actions
+  ]
 }
 
 resource "azurerm_key_vault_secret" "openai_model" {
@@ -326,5 +343,8 @@ resource "azurerm_key_vault_secret" "openai_model" {
   value        = azurerm_cognitive_deployment.gpt_model.name
   key_vault_id = azurerm_key_vault.main.id
 
-  depends_on = [azurerm_key_vault_access_policy.managed_identity]
+  depends_on = [
+    azurerm_key_vault_access_policy.managed_identity,
+    azurerm_key_vault_access_policy.github_actions
+  ]
 }
