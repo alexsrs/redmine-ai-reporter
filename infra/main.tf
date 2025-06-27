@@ -210,7 +210,8 @@ resource "azurerm_windows_function_app" "main" {
     "AZURE_CLIENT_ID"                       = azurerm_user_assigned_identity.main.client_id
     "KEY_VAULT_URI"                         = azurerm_key_vault.main.vault_uri
     "AZURE_OPENAI_ENDPOINT"                 = azurerm_cognitive_account.openai.endpoint
-    "AZURE_OPENAI_MODEL"                    = azurerm_cognitive_deployment.gpt_model.name
+    "AZURE_OPENAI_MODEL_DEPLOYMENT"         = azurerm_cognitive_deployment.gpt_model.name
+    "AZURE_OPENAI_API_KEY"                  = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.main.name};SecretName=OPENAI-API-KEY)"
   }
 
   tags = merge(local.tags, {
