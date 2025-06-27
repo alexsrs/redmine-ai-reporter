@@ -49,6 +49,12 @@ jobs:
         working-directory: ./infra
         run: terraform init
 
+      - name: Import existing resources if needed
+        working-directory: ./infra
+        run: |
+          terraform import azurerm_resource_group.main "/subscriptions/${{ env.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-redmine-ai-reporter-dev" || true
+        continue-on-error: true
+
       - name: Terraform Plan
         working-directory: ./infra
         run: terraform plan -out=tfplan

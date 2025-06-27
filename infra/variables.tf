@@ -27,5 +27,5 @@ variable "app_name" {
 variable "resource_group_name" {
   description = "Nome do Resource Group onde os recursos serão criados"
   type        = string
-  default     = "rg-redmine-ai-reporter-homolog"
+  default     = "rg-redmine-ai-reporter-dev"
 }
