@@ -324,8 +324,8 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 **Alex Sandro Ribeiro de Souza**
 
 - 📧 Email: alexsrs@gmail.com
-- 💼 LinkedIn: [Perfil pessoal](https://www.linkedin.com/in/alex4/)
-- 🐙 GitHub: [Repositórios de código](https://github.com/alexsrs)
+- 💼 LinkedIn: [alexsandro-ribeiro-dev](https://www.linkedin.com/in/alex4/)
+- 🐙 GitHub: [@alexsandro-ribeiro-dev](https://github.com/alexsandro-ribeiro-dev)
 
 ---
 
