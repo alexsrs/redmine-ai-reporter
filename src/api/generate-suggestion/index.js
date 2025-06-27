@@ -1,3 +1,5 @@
+const { AzureOpenAI } = require("openai");
+
 module.exports = async function (context, req) {
   context.log("Starting generate-suggestion function...");
 
@@ -89,7 +91,7 @@ module.exports = async function (context, req) {
   }
 };
 
-// Função para chamar Azure OpenAI com retry e timeout
+// Função para chamar Azure OpenAI com retry e timeout usando o SDK oficial
 async function callAzureOpenAI(context, activityText) {
   // Configuração do Azure OpenAI a partir de variáveis de ambiente
   const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
@@ -104,13 +106,14 @@ async function callAzureOpenAI(context, activityText) {
     return null;
   }
 
-  const url = `${endpoint}openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+  // Configuração do cliente Azure OpenAI
+  const options = { endpoint, apiKey, deployment, apiVersion };
+  const client = new AzureOpenAI(options);
 
-  const payload = {
-    messages: [
-      {
-        role: "system",
-        content: `Você é um assistente para análise de atividades do Redmine. Responda APENAS com JSON válido seguindo este formato:
+  const messages = [
+    {
+      role: "system",
+      content: `Você é um assistente para análise de atividades do Redmine. Responda APENAS com JSON válido seguindo este formato:
 {
   "sugestao": {
     "data": "YYYY-MM-DD",
@@ -125,15 +128,12 @@ async function callAzureOpenAI(context, activityText) {
   "timestamp": "ISO DateTime",
   "id": "suggestion_XXXXX"
 }`,
-      },
-      {
-        role: "user",
-        content: `Analise: "${activityText}"`,
-      },
-    ],
-    max_tokens: 500,
-    temperature: 0.3,
-  };
+    },
+    {
+      role: "user",
+      content: `Analise: "${activityText}"`,
+    },
+  ];
 
   // Implementação de retry com exponential backoff
   const maxRetries = 3;
@@ -141,24 +141,19 @@ async function callAzureOpenAI(context, activityText) {
     try {
       context.log(`Tentativa ${attempt}/${maxRetries} para Azure OpenAI`);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": apiKey,
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30000), // 30 segundos timeout
+      const response = await client.chat.completions.create({
+        messages: messages,
+        max_tokens: 500,
+        temperature: 0.3,
+        model: deployment,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (response?.error !== undefined && response.status !== "200") {
+        throw new Error(`Azure OpenAI Error: ${response.error}`);
       }
 
-      const data = await response.json();
-
-      if (data.choices && data.choices.length > 0) {
-        const aiContent = data.choices[0].message.content;
+      if (response.choices && response.choices.length > 0) {
+        const aiContent = response.choices[0].message.content;
         try {
           const aiResponse = JSON.parse(aiContent);
           aiResponse.source = "azure_openai";
