@@ -8,7 +8,7 @@ cd infra
 
 # Importar o resource group existente para o estado do Terraform
 Write-Host "📥 Importando resource group existente..." -ForegroundColor Yellow
-terraform import azurerm_resource_group.main "/subscriptions/$env:AZURE_SUBSCRIPTION_ID/resourceGroups/rg-redmine-ai-reporter-dev"
+terraform import azurerm_resource_group.main "/subscriptions/$env:AZURE_SUBSCRIPTION_ID/resourceGroups/rg-redmine-ai-reporter-homolog"
 
 # Verificar o estado após importação
 Write-Host "✅ Verificando estado após importação..." -ForegroundColor Cyan
