@@ -97,7 +97,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/src/frontend"
-          api_location: "/src/api"
           output_location: "dist"
 
       - name: Test Health Endpoints
