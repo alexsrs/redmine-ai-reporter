@@ -85,6 +85,8 @@ jobs:
       - name: Build Frontend
         working-directory: ./src/frontend
         run: |
+          # Update production environment with correct Function App URL
+          echo "VITE_API_BASE_URL=https://${{ steps.terraform-outputs.outputs.function_app_name }}.azurewebsites.net/api" > .env.production
           npm ci
           npm run build
 
@@ -95,7 +97,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/src/frontend"
-          api_location: ""
+          api_location: "/src/api"
           output_location: "dist"
 
       - name: Test Health Endpoints
@@ -103,7 +105,12 @@ jobs:
           echo "Aguardando deploy..."
           sleep 30
 
-          # Test Function App health
+          # Test Function App health directly
+          echo "Testing Function App health..."
           curl -f "https://${{ steps.terraform-outputs.outputs.function_app_name }}.azurewebsites.net/api/health" || exit 1
+
+          # Test Function App generate-suggestion
+          echo "Testing Function App generate-suggestion..."
+          curl -X POST -H "Content-Type: application/json" -d '{"texto":"teste"}' "https://${{ steps.terraform-outputs.outputs.function_app_name }}.azurewebsites.net/api/generate-suggestion" || exit 1
 
           echo "Deploy concluído com sucesso!"
