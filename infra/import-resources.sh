@@ -87,11 +87,12 @@ import_resource "azurerm_user_assigned_identity.main" \
     "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/redmine-ai-reporter-mi" \
     "User Assigned Identity"
 
-# 6. Key Vault
-echo "🔑 Importando Key Vault..."
-import_resource "azurerm_key_vault.main" \
-    "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv" \
-    "Key Vault"
+# 6. Key Vault - FORA DO TERRAFORM (MANUAL)
+echo "🔑 Key Vault e Secrets são gerenciados manualmente - IGNORANDO"
+echo "ℹ️  Recursos manuais existentes:"
+echo "    - Key Vault: redmine-ai-reporter-kv"
+echo "    - Secrets: OPENAI-API-KEY, AZURE-OPENAI-ENDPOINT, AZURE-OPENAI-MODEL"
+echo "    - Access Policies: Configuradas manualmente"
 
 # 7. Azure OpenAI
 echo "🤖 Importando Azure OpenAI..."
@@ -123,55 +124,14 @@ import_resource "azurerm_static_web_app.main" \
     "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Web/staticSites/redmine-ai-reporter-swa" \
     "Static Web App"
 
-# 12. Key Vault Access Policies
-echo "🔒 Verificando Key Vault Access Policies..."
-echo "ℹ️  ESTRATÉGIA: Access Policies serão removidas e recriadas pelo Terraform"
-echo "ℹ️  Isso é seguro - não há perda de dados, apenas reconfiguração de permissões"
-
-# Remover access policies existentes para evitar conflitos
-echo "🧹 Removendo access policies existentes para recriação..."
-
-# Obter Object ID da Managed Identity
-if MANAGED_IDENTITY_OBJECT_ID=$(az identity show --name "redmine-ai-reporter-mi" --resource-group "$RESOURCE_GROUP" --query principalId -o tsv 2>/dev/null); then
-    echo "🔍 Managed Identity Object ID: $MANAGED_IDENTITY_OBJECT_ID"
-    # Remover access policy da managed identity se existir
-    az keyvault delete-policy \
-        --name "redmine-ai-reporter-kv" \
-        --object-id "$MANAGED_IDENTITY_OBJECT_ID" \
-        --output none 2>/dev/null || echo "  Access policy da Managed Identity não existia"
-fi
-
-# Remover access policy do contexto atual se existir
-CURRENT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
-if [ -z "$CURRENT_OBJECT_ID" ]; then
-    # Se não conseguir obter o usuário, tentar obter via service principal  
-    CURRENT_OBJECT_ID=$(az account show --query user.name -o tsv | xargs -I {} az ad sp show --id {} --query id -o tsv 2>/dev/null)
-fi
-
-if [ ! -z "$CURRENT_OBJECT_ID" ]; then
-    echo "🔍 Current Context Object ID: $CURRENT_OBJECT_ID"
-    # Remover access policy do contexto atual se existir
-    az keyvault delete-policy \
-        --name "redmine-ai-reporter-kv" \
-        --object-id "$CURRENT_OBJECT_ID" \
-        --output none 2>/dev/null || echo "  Access policy do contexto atual não existia"
-fi
-
-echo "✅ Access policies removidas - Terraform irá recriá-las corretamente"
-
-# 13. Key Vault Secrets
-echo "🔐 Importando Key Vault Secrets..."
-import_resource "azurerm_key_vault_secret.openai_api_key" \
-    "https://redmine-ai-reporter-kv.vault.azure.net/secrets/OPENAI-API-KEY" \
-    "OpenAI API Key Secret"
-
-import_resource "azurerm_key_vault_secret.openai_endpoint" \
-    "https://redmine-ai-reporter-kv.vault.azure.net/secrets/AZURE-OPENAI-ENDPOINT" \
-    "OpenAI Endpoint Secret"
-
-import_resource "azurerm_key_vault_secret.openai_model" \
-    "https://redmine-ai-reporter-kv.vault.azure.net/secrets/AZURE-OPENAI-MODEL" \
-    "OpenAI Model Secret"
+# 12. Key Vault - ESTRATÉGIA MANUAL
+echo "� Key Vault, Access Policies e Secrets são gerenciados MANUALMENTE"
+echo "ℹ️  Motivo: Recursos críticos com dados sensíveis"
+echo "ℹ️  Recursos existentes (fora do Terraform):"
+echo "    - Key Vault: redmine-ai-reporter-kv"
+echo "    - Secrets: OPENAI-API-KEY, AZURE-OPENAI-ENDPOINT, AZURE-OPENAI-MODEL"
+echo "    - Access Policies: Configuradas manualmente conforme necessário"
+echo "✅ Terraform agora irá IGNORAR estes recursos críticos"
 
 echo "✅ Import automático concluído!"
 echo "📝 Execute 'terraform plan' para verificar o estado atual."

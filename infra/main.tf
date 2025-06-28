@@ -173,9 +173,22 @@ resource "azurerm_user_assigned_identity" "main" {
 }
 
 # ========================================
-# 6. KEY VAULT (FREE TIER)
+# 6. KEY VAULT (MANUAL - FORA DO TERRAFORM)
+# ========================================
+# DECISÃO: Key Vault e Secrets são recursos críticos demais
+# para serem gerenciados pelo CI/CD. Devem ser criados manualmente.
+# 
+# Recursos existentes no Azure (manuais):
+# - Key Vault: redmine-ai-reporter-kv
+# - Secret: OPENAI-API-KEY 
+# - Secret: AZURE-OPENAI-ENDPOINT
+# - Secret: AZURE-OPENAI-MODEL
+# - Access Policies configuradas manualmente
+#
+# Este bloco está comentado para evitar conflitos no CI/CD
 # ========================================
 
+/*
 resource "azurerm_key_vault" "main" {
   name                = local.resource_names.key_vault
   location            = azurerm_resource_group.main.location
@@ -226,6 +239,7 @@ resource "azurerm_key_vault_access_policy" "github_actions" {
     "Set"
   ]
 }
+*/
 
 # ========================================
 # 7. AZURE OPENAI (STANDARD - necessário para API)
@@ -343,12 +357,12 @@ resource "azurerm_windows_function_app" "main" {
     "AzureWebJobsStorage"                   = azurerm_storage_account.main.primary_connection_string
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
     "AZURE_CLIENT_ID"                       = azurerm_user_assigned_identity.main.client_id
-    "KEY_VAULT_URI"                         = azurerm_key_vault.main.vault_uri
+    "KEY_VAULT_URI"                         = "https://redmine-ai-reporter-kv.vault.azure.net/"
     
     # Azure OpenAI Settings (via Key Vault para segurança)
     "AZURE_OPENAI_ENDPOINT"         = azurerm_cognitive_account.openai.endpoint
     "AZURE_OPENAI_MODEL_DEPLOYMENT" = azurerm_cognitive_deployment.gpt_model.name
-    "AZURE_OPENAI_API_KEY"          = "@Microsoft.KeyVault(VaultName=${azurerm_key_vault.main.name};SecretName=OPENAI-API-KEY)"
+    "AZURE_OPENAI_API_KEY"          = "@Microsoft.KeyVault(VaultName=redmine-ai-reporter-kv;SecretName=OPENAI-API-KEY)"
   }
   
   tags = merge(local.tags, {
@@ -395,9 +409,18 @@ resource "azurerm_static_web_app" "main" {
 }
 
 # ========================================
-# 11. KEY VAULT SECRETS (Protegidos)
+# 11. KEY VAULT SECRETS (MANUAL - FORA DO TERRAFORM)
+# ========================================
+# DECISÃO: Secrets são dados críticos, devem ser gerenciados manualmente
+# para evitar conflitos e perda acidental de dados sensíveis.
+#
+# Secrets existentes (configurados manualmente):
+# - OPENAI-API-KEY: {chave da Azure OpenAI}
+# - AZURE-OPENAI-ENDPOINT: {endpoint da Azure OpenAI}
+# - AZURE-OPENAI-MODEL: gpt-4o-mini
 # ========================================
 
+/*
 # IMPORTANTE: Secret com a API Key do Azure OpenAI
 resource "azurerm_key_vault_secret" "openai_api_key" {
   name         = "OPENAI-API-KEY"
@@ -450,3 +473,4 @@ resource "azurerm_key_vault_secret" "openai_model" {
     azurerm_key_vault_access_policy.managed_identity
   ]
 }
+*/
