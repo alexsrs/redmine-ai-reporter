@@ -381,8 +381,8 @@ resource "azurerm_windows_function_app" "main" {
   depends_on = [
     azurerm_storage_account.main,
     azurerm_application_insights.main,
-    azurerm_user_assigned_identity.main,
-    azurerm_key_vault_access_policy.managed_identity
+    azurerm_user_assigned_identity.main
+    # azurerm_key_vault_access_policy.managed_identity  # GERENCIADO MANUALMENTE
   ]
 }
 

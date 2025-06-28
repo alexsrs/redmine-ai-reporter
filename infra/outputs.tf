@@ -41,11 +41,11 @@ output "openai_model_deployment" {
   value       = azurerm_cognitive_deployment.gpt_model.name
 }
 
-# Key Vault para secrets
-output "key_vault_uri" {
-  description = "URI do Key Vault"
-  value       = azurerm_key_vault.main.vault_uri
-}
+# Key Vault para secrets (GERENCIADO MANUALMENTE)
+# output "key_vault_uri" {
+#   description = "URI do Key Vault"
+#   value       = azurerm_key_vault.main.vault_uri
+# }
 
 output "managed_identity_client_id" {
   description = "Client ID da Managed Identity"
