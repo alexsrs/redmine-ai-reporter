@@ -6,7 +6,7 @@ import {
   ActivityHistory,
 } from "../types";
 
-const API_BASE_URL = 
+const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://redmine-ai-reporter-func.azurewebsites.net";
 
@@ -46,7 +46,7 @@ export const aiService = {
     };
 
     const response = await api.post<SuggestionResponse>(
-      "/generate-suggestion",
+      "/api/generate-suggestion",
       requestData
     );
 
@@ -57,7 +57,7 @@ export const aiService = {
    * Recupera histórico de sugestões
    */
   async getHistory(): Promise<HistoryEntry[]> {
-    const response = await api.get<HistoryEntry[]>("/history");
+    const response = await api.get<HistoryEntry[]>("/api/history");
     return response.data;
   },
 
@@ -68,14 +68,14 @@ export const aiService = {
     id: string,
     sendToRedmine: boolean = false
   ): Promise<void> {
-    await api.post(`/approve/${id}`, { sendToRedmine });
+    await api.post(`/api/approve/${id}`, { sendToRedmine });
   },
 
   /**
    * Testa a conexão com a API
    */
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    const response = await api.get("/health");
+    const response = await api.get("/api/health");
     return response.data;
   },
 
@@ -96,7 +96,9 @@ export const aiService = {
       });
     }
 
-    const response = await api.get(`/activity-history?${params.toString()}`);
+    const response = await api.get(
+      `/api/activity-history?${params.toString()}`
+    );
     return response.data;
   },
 
@@ -110,7 +112,7 @@ export const aiService = {
     feedback?: string,
     redmineData?: any
   ): Promise<any> {
-    const response = await api.post("/manage-suggestion", {
+    const response = await api.post("/api/manage-suggestion", {
       activityId,
       userId,
       action,
@@ -131,7 +133,7 @@ export const aiService = {
     activityType?: string,
     description?: string
   ): Promise<any> {
-    const response = await api.post("/upload-evidence", {
+    const response = await api.post("/api/upload-evidence", {
       userId,
       fileName,
       fileContent,

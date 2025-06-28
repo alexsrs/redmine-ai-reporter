@@ -366,7 +366,14 @@ jobs:
   validate-deployment:
     name: "Validate Full Deployment"
     runs-on: ubuntu-latest
-    needs: [detect-changes, get-infra-info, infrastructure, deploy-api, deploy-frontend]
+    needs:
+      [
+        detect-changes,
+        get-infra-info,
+        infrastructure,
+        deploy-api,
+        deploy-frontend,
+      ]
     if: |
       always() && 
       (needs.infrastructure.result == 'success' || needs.infrastructure.result == 'skipped') &&
