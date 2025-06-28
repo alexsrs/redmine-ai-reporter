@@ -6,17 +6,17 @@ on:
   workflow_dispatch:
     inputs:
       force_infrastructure:
-        description: 'Force infrastructure deployment'
+        description: "Force infrastructure deployment"
         required: false
         default: false
         type: boolean
       force_api:
-        description: 'Force API deployment'
+        description: "Force API deployment"
         required: false
         default: false
         type: boolean
       force_frontend:
-        description: 'Force frontend deployment'
+        description: "Force frontend deployment"
         required: false
         default: false
         type: boolean
@@ -50,7 +50,7 @@ jobs:
         id: changes
         run: |
           echo "🔍 Detectando mudanças desde o último commit..."
-          
+
           # Se for workflow_dispatch ou primeiro commit, deploy tudo
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$(git rev-list --count HEAD)" = "1" ]; then
             echo "infrastructure=true" >> $GITHUB_OUTPUT
@@ -124,7 +124,7 @@ jobs:
         id: check_infra
         run: |
           echo "🔍 Verificando se infraestrutura já existe..."
-          
+
           # Verificar se o Resource Group existe
           if az group show --name ${{ env.AZURE_RESOURCE_GROUP }} &> /dev/null; then
             echo "infra_exists=true" >> $GITHUB_OUTPUT
@@ -300,8 +300,8 @@ jobs:
           azure_static_web_apps_api_token: ${{ steps.get_swa_token.outputs.token }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
-          app_location: "src/frontend"
-          output_location: "dist"
+          app_location: "src/frontend/dist"
+          output_location: "."
           skip_app_build: true
 
   # ========================================
