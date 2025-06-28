@@ -1,31 +1,32 @@
-# Variables for Terraform configuration
+# ========================================
+# VARIABLES - FREE TIER CONFIGURATION
+# ========================================
 
-variable "environment_name" {
-  description = "Nome do ambiente (ex: dev, staging, prod)"
+variable "resource_group_name" {
+  description = "Nome do resource group (deve ser único)"
   type        = string
-  default     = "dev"
+  default     = "rg-redmine-ai-reporter"
+  
+  validation {
+    condition     = length(var.resource_group_name) > 3 && length(var.resource_group_name) < 64
+    error_message = "Resource group name deve ter entre 3 e 63 caracteres."
+  }
 }
 
 variable "location" {
-  description = "Localização dos recursos Azure"
+  description = "Localização dos recursos Azure (FREE tier disponível)"
   type        = string
-  default     = "East US 2"  # East US 2 é suportado pelo Static Web App
-}
-
-variable "resource_prefix" {
-  description = "Prefixo para nomenclatura dos recursos"
-  type        = string
-  default     = "redmine-ai"
-}
-
-variable "app_name" {
-  description = "Nome da app principal"
-  type        = string
-  default     = "redmine-ai-reporter"
-}
-
-variable "resource_group_name" {
-  description = "Nome do Resource Group onde os recursos serão criados"
-  type        = string
-  default     = "rg-redmine-ai-reporter-dev"
+  default     = "East US 2"
+  
+  validation {
+    condition = contains([
+      "East US",
+      "East US 2", 
+      "West US 2",
+      "West Europe",
+      "North Europe",
+      "Southeast Asia"
+    ], var.location)
+    error_message = "Localização deve ser uma região com FREE tier disponível."
+  }
 }
