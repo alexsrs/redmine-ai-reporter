@@ -177,10 +177,19 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Get SWA Deployment Token
+        id: get_swa_token
+        run: |
+          echo "🔑 Obtendo deployment token do Static Web App..."
+          echo "token=$(az staticwebapp secrets list \
+            --name ${{ needs.infrastructure.outputs.static_web_app_name }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query properties.apiKey -o tsv)" >> $GITHUB_OUTPUT
+
       - name: Deploy to Azure Static Web App
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_CREDENTIALS }}
+          azure_static_web_apps_api_token: ${{ steps.get_swa_token.outputs.token }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           app_location: "src/frontend"
