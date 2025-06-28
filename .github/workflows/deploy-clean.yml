@@ -194,7 +194,7 @@ jobs:
           action: upload
           app_location: "src/frontend"
           api_location: "src/api"
-          output_location: "src/frontend/dist"
+          output_location: "dist"
 
   # ========================================
   # VALIDATION AND TESTING
