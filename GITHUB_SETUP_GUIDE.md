@@ -1,73 +1,76 @@
 # 🔐 CONFIGURAÇÃO DOS SECRETS DO GITHUB ACTIONS
 
-## ⚠️ IMPORTANTE: Configure os seguintes secrets no GitHub
+## ⚠️ IMPORTANTE: Configure o seguinte secret no GitHub
 
 Acesse: **GitHub Repository → Settings → Secrets and variables → Actions → New repository secret**
 
-### **SECRETS NECESSÁRIOS (4 no total):**
+### **SECRET NECESSÁRIO (1 apenas):**
 
-#### 1. **AZURE_CLIENT_ID**
-- Valor: [Use o Client ID do service principal criado]
-- Fonte: Output do comando `az ad sp create-for-rbac`
-
-#### 2. **AZURE_CLIENT_SECRET** 
-- Valor: [Use o Client Secret do service principal criado]
-- Fonte: Output do comando `az ad sp create-for-rbac`
-
-#### 3. **AZURE_TENANT_ID**
-- Valor: [Use o Tenant ID da sua Azure AD]
-- Fonte: `az account show --query tenantId -o tsv`
-
-#### 4. **AZURE_SUBSCRIPTION_ID**
-- Valor: [Use o Subscription ID onde os recursos serão criados]
-- Fonte: `az account show --query id -o tsv`
+#### **AZURE_CREDENTIALS**
+- **Nome do Secret:** `AZURE_CREDENTIALS`
+- **Valor:** JSON completo do service principal
+- **Formato:**
+```json
+{
+  "clientId": "[SEU_CLIENT_ID]",
+  "clientSecret": "[SEU_CLIENT_SECRET]", 
+  "subscriptionId": "57709152-8595-4415-a679-06b2fcd781aa",
+  "tenantId": "b0864049-6d5c-4766-83a4-893358eaf2a5"
+}
+```
 
 ## 🔧 PASSOS NO GITHUB:
 
 1. **Acesse o repositório no GitHub**
 2. **Vá em Settings → Secrets and variables → Actions**
 3. **Clique em "New repository secret"**
-4. **Adicione cada secret acima (um por vez)**
+4. **Nome:** `AZURE_CREDENTIALS`
+5. **Value:** Cole o JSON acima com suas credenciais
 
 ## ✅ VERIFICAÇÃO:
 
-Após adicionar todos os secrets, você deve ter **4 secrets**:
-- ✅ `AZURE_CLIENT_ID`
-- ✅ `AZURE_CLIENT_SECRET` 
-- ✅ `AZURE_TENANT_ID`
-- ✅ `AZURE_SUBSCRIPTION_ID`
-
-> **📝 NOTA:** Não é mais necessário `AZURE_STATIC_WEB_APPS_API_TOKEN` - o token é obtido automaticamente via Azure CLI!
+Após configurar, você deve ter **1 secret**:
+- ✅ `AZURE_CREDENTIALS`
 
 ## 🚀 APÓS CONFIGURAR:
 
-1. **Commit as alterações** do workflow
+1. **Commit as alterações** do workflow  
 2. **Push para master** (vai triggerar o deploy)
 3. **Monitore no GitHub Actions**
 
-## 🔒 SEGURANÇA:
+## 🔒 VANTAGENS DA ABORDAGEM ATUAL:
 
-- ✅ Service Principal criado com **mínimas permissões** necessárias
-- ✅ Escopo limitado à **subscription específica**
-- ✅ Role **Contributor** (necessário para gerenciar recursos)
-- ✅ **Secrets protegidos** no GitHub (não visíveis nos logs)
-
-## 🆕 MELHORIAS NA AUTENTICAÇÃO:
-
-**Static Web App Token:**
-- ❌ **ANTES:** Usava secret manual `AZURE_STATIC_WEB_APPS_API_TOKEN`
-- ✅ **AGORA:** Token obtido dinamicamente via `az staticwebapp secrets list`
-- 🎯 **VANTAGEM:** Sempre atualizado, mais seguro, sem manutenção manual
+- ✅ **1 secret** apenas (mais simples)
+- ✅ **Formato padrão** do Azure CLI
+- ✅ **Compatível** com `azure/login@v2`
+- ✅ **Mais seguro** (tudo em um secret)
 
 ## 📝 COMO CRIAR O SERVICE PRINCIPAL:
 
 ```bash
-# Criar service principal para GitHub Actions
+# Criar service principal para GitHub Actions (retorna o JSON completo)
 az ad sp create-for-rbac \
   --name "github-actions-redmine-ai-reporter" \
   --role "Contributor" \
-  --scopes "/subscriptions/YOUR_SUBSCRIPTION_ID" \
-  --sdk-auth false
+  --scopes "/subscriptions/57709152-8595-4415-a679-06b2fcd781aa" \
+  --sdk-auth
 ```
 
-**⚠️ IMPORTANTE:** Use os valores retornados deste comando para configurar os secrets no GitHub!
+**💡 DICA:** Use a flag `--sdk-auth` para obter o formato JSON correto!
+
+## 🆕 MELHORIAS:
+
+**Antes (4 secrets):**
+- ❌ `AZURE_CLIENT_ID`
+- ❌ `AZURE_CLIENT_SECRET` 
+- ❌ `AZURE_TENANT_ID`
+- ❌ `AZURE_SUBSCRIPTION_ID`
+
+**Agora (1 secret):**
+- ✅ `AZURE_CREDENTIALS` (contém tudo)
+
+**Static Web App Token:**
+- ✅ Obtido dinamicamente via `az staticwebapp secrets list`
+- ✅ Sempre atualizado, mais seguro
+
+**⚠️ IMPORTANTE:** Use as credenciais geradas via Azure CLI com `--sdk-auth`!
