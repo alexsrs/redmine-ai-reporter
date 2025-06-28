@@ -93,17 +93,43 @@ jobs:
           fi
 
   # ========================================
+  # GET INFRASTRUCTURE INFO (ALWAYS)
+  # ========================================
+  get-infra-info:
+    name: "Get Infrastructure Names"
+    runs-on: ubuntu-latest
+    outputs:
+      function_app_name: ${{ steps.get_names.outputs.function_app_name }}
+      static_web_app_name: ${{ steps.get_names.outputs.static_web_app_name }}
+      project_name: ${{ steps.get_names.outputs.project_name }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get Resource Names
+        id: get_names
+        run: |
+          echo "📋 Obtendo nomes dos recursos..."
+          
+          # Nomes fixos definidos no Terraform
+          echo "function_app_name=redmine-ai-reporter-func" >> $GITHUB_OUTPUT
+          echo "static_web_app_name=redmine-ai-reporter-swa" >> $GITHUB_OUTPUT
+          echo "project_name=redmine-ai-reporter" >> $GITHUB_OUTPUT
+          
+          echo "✅ Function App: redmine-ai-reporter-func"
+          echo "✅ Static Web App: redmine-ai-reporter-swa"
+
+  # ========================================
   # TERRAFORM INFRASTRUCTURE (CONDITIONAL)
   # ========================================
   infrastructure:
     name: "Deploy Infrastructure (FREE Tier)"
     runs-on: ubuntu-latest
-    needs: detect-changes
+    needs: [detect-changes, get-infra-info]
     if: needs.detect-changes.outputs.infrastructure_changed == 'true' || needs.detect-changes.outputs.force_infra == 'true'
-    outputs:
-      function_app_name: ${{ steps.terraform_output.outputs.function_app_name }}
-      static_web_app_name: ${{ steps.terraform_output.outputs.static_web_app_name }}
-      project_name: ${{ steps.terraform_output.outputs.project_name }}
 
     steps:
       - name: Checkout
@@ -175,7 +201,7 @@ jobs:
   deploy-api:
     name: "Deploy Function App (API)"
     runs-on: ubuntu-latest
-    needs: [detect-changes, infrastructure]
+    needs: [detect-changes, get-infra-info, infrastructure]
     if: |
       always() && 
       (needs.detect-changes.outputs.api_changed == 'true' || 
@@ -213,12 +239,12 @@ jobs:
 
       - name: Deploy to Function App
         run: |
-          echo "🚀 Deploying to Function App: ${{ needs.infrastructure.outputs.function_app_name }}"
+          echo "🚀 Deploying to Function App: ${{ needs.get-infra-info.outputs.function_app_name }}"
           zip -r ../api-deploy.zip . -x "node_modules/@types/*" "*.md" "*.txt"
 
           az functionapp deployment source config-zip \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name ${{ needs.infrastructure.outputs.function_app_name }} \
+            --name ${{ needs.get-infra-info.outputs.function_app_name }} \
             --src ../api-deploy.zip \
             --timeout 300
 
@@ -226,7 +252,7 @@ jobs:
         run: |
           echo "🔍 Testing API health..."
           sleep 60  # Wait for deployment
-          FUNCTION_URL="https://${{ needs.infrastructure.outputs.function_app_name }}.azurewebsites.net"
+          FUNCTION_URL="https://${{ needs.get-infra-info.outputs.function_app_name }}.azurewebsites.net"
 
           for i in {1..5}; do
             echo "Attempt $i: Testing $FUNCTION_URL/api/health"
@@ -245,7 +271,7 @@ jobs:
   deploy-frontend:
     name: "Deploy Static Web App (Frontend)"
     runs-on: ubuntu-latest
-    needs: [detect-changes, infrastructure, deploy-api]
+    needs: [detect-changes, get-infra-info, infrastructure, deploy-api]
     if: |
       always() && 
       (needs.detect-changes.outputs.frontend_changed == 'true' || 
@@ -269,7 +295,7 @@ jobs:
       - name: Configure API URL
         run: |
           echo "🔧 Configuring API URL..."
-          API_URL="https://${{ needs.infrastructure.outputs.function_app_name }}.azurewebsites.net"
+          API_URL="https://${{ needs.get-infra-info.outputs.function_app_name }}.azurewebsites.net"
           echo "VITE_API_URL=$API_URL" > .env.production
           echo "API configured: $API_URL"
 
@@ -290,7 +316,7 @@ jobs:
         run: |
           echo "🔑 Obtendo deployment token do Static Web App..."
           echo "token=$(az staticwebapp secrets list \
-            --name ${{ needs.infrastructure.outputs.static_web_app_name }} \
+            --name ${{ needs.get-infra-info.outputs.static_web_app_name }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --query properties.apiKey -o tsv)" >> $GITHUB_OUTPUT
 
@@ -303,6 +329,7 @@ jobs:
           app_location: "src/frontend/dist"
           output_location: "."
           skip_app_build: true
+          skip_api_build: true
 
   # ========================================
   # VALIDATION AND TESTING
@@ -310,7 +337,7 @@ jobs:
   validate-deployment:
     name: "Validate Full Deployment"
     runs-on: ubuntu-latest
-    needs: [infrastructure, deploy-api, deploy-frontend]
+    needs: [get-infra-info, infrastructure, deploy-api, deploy-frontend]
 
     steps:
       - name: Azure Login
@@ -323,7 +350,7 @@ jobs:
           echo "🧪 Testing complete application..."
 
           # Test API
-          API_URL="https://${{ needs.infrastructure.outputs.function_app_name }}.azurewebsites.net"
+          API_URL="https://${{ needs.get-infra-info.outputs.function_app_name }}.azurewebsites.net"
           echo "Testing API: $API_URL/api/health"
 
           if curl -f "$API_URL/api/health" -m 30; then
@@ -335,7 +362,7 @@ jobs:
 
           # Test Frontend  
           SWA_URL=$(az staticwebapp show \
-            --name ${{ needs.infrastructure.outputs.static_web_app_name }} \
+            --name ${{ needs.get-infra-info.outputs.static_web_app_name }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --query "defaultHostname" -o tsv)
 
@@ -353,10 +380,10 @@ jobs:
           echo "📊 DEPLOYMENT SUMMARY (FREE TIER)"
           echo "=================================="
           echo "Resource Group: ${{ env.AZURE_RESOURCE_GROUP }}"
-          echo "Function App: ${{ needs.infrastructure.outputs.function_app_name }}"
-          echo "Static Web App: ${{ needs.infrastructure.outputs.static_web_app_name }}"
-          echo "Project: ${{ needs.infrastructure.outputs.project_name }}"
-          echo "API URL: https://${{ needs.infrastructure.outputs.function_app_name }}.azurewebsites.net"
+          echo "Function App: ${{ needs.get-infra-info.outputs.function_app_name }}"
+          echo "Static Web App: ${{ needs.get-infra-info.outputs.static_web_app_name }}"
+          echo "Project: ${{ needs.get-infra-info.outputs.project_name }}"
+          echo "API URL: https://${{ needs.get-infra-info.outputs.function_app_name }}.azurewebsites.net"
           echo ""
           echo "💰 All resources using FREE tier"
           echo "🔒 Critical resources PROTECTED against recreation"
