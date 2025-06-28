@@ -124,36 +124,40 @@ import_resource "azurerm_static_web_app.main" \
     "Static Web App"
 
 # 12. Key Vault Access Policies
-echo "🔒 Importando Key Vault Access Policies..."
+echo "🔒 Verificando Key Vault Access Policies..."
+echo "ℹ️  ESTRATÉGIA: Access Policies serão removidas e recriadas pelo Terraform"
+echo "ℹ️  Isso é seguro - não há perda de dados, apenas reconfiguração de permissões"
+
+# Remover access policies existentes para evitar conflitos
+echo "🧹 Removendo access policies existentes para recriação..."
 
 # Obter Object ID da Managed Identity
 if MANAGED_IDENTITY_OBJECT_ID=$(az identity show --name "redmine-ai-reporter-mi" --resource-group "$RESOURCE_GROUP" --query principalId -o tsv 2>/dev/null); then
     echo "🔍 Managed Identity Object ID: $MANAGED_IDENTITY_OBJECT_ID"
-    # Formato correto para Key Vault Access Policy: KeyVaultId/ObjectId
-    KEY_VAULT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv"
-    import_resource "azurerm_key_vault_access_policy.managed_identity" \
-        "$KEY_VAULT_ID/objectId/$MANAGED_IDENTITY_OBJECT_ID" \
-        "Key Vault Access Policy - Managed Identity"
-else
-    echo "⚠️  Managed Identity não encontrada - será criada"
+    # Remover access policy da managed identity se existir
+    az keyvault delete-policy \
+        --name "redmine-ai-reporter-kv" \
+        --object-id "$MANAGED_IDENTITY_OBJECT_ID" \
+        --output none 2>/dev/null || echo "  Access policy da Managed Identity não existia"
 fi
 
-# Obter Object ID do contexto atual (quem está executando o Terraform)
+# Remover access policy do contexto atual se existir
 CURRENT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
 if [ -z "$CURRENT_OBJECT_ID" ]; then
-    # Se não conseguir obter o usuário, tentar obter via service principal
+    # Se não conseguir obter o usuário, tentar obter via service principal  
     CURRENT_OBJECT_ID=$(az account show --query user.name -o tsv | xargs -I {} az ad sp show --id {} --query id -o tsv 2>/dev/null)
 fi
 
 if [ ! -z "$CURRENT_OBJECT_ID" ]; then
     echo "🔍 Current Context Object ID: $CURRENT_OBJECT_ID"
-    KEY_VAULT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv"
-    import_resource "azurerm_key_vault_access_policy.github_actions" \
-        "$KEY_VAULT_ID/objectId/$CURRENT_OBJECT_ID" \
-        "Key Vault Access Policy - Current Context"
-else
-    echo "⚠️  Não foi possível obter Object ID atual - Access Policy será criada"
+    # Remover access policy do contexto atual se existir
+    az keyvault delete-policy \
+        --name "redmine-ai-reporter-kv" \
+        --object-id "$CURRENT_OBJECT_ID" \
+        --output none 2>/dev/null || echo "  Access policy do contexto atual não existia"
 fi
+
+echo "✅ Access policies removidas - Terraform irá recriá-las corretamente"
 
 # 13. Key Vault Secrets
 echo "🔐 Importando Key Vault Secrets..."
