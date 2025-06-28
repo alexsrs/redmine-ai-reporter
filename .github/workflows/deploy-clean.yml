@@ -177,23 +177,15 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Static Web App
-        run: |
-          echo "🚀 Deploying to Static Web App: ${{ needs.infrastructure.outputs.static_web_app_name }}"
-
-          # Get deployment token
-          DEPLOY_TOKEN=$(az staticwebapp secrets list \
-            --name ${{ needs.infrastructure.outputs.static_web_app_name }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query "properties.apiKey" -o tsv)
-
-          # Deploy using SWA CLI
-          npx @azure/static-web-apps-cli deploy \
-            --deployment-token "$DEPLOY_TOKEN" \
-            --app-location "." \
-            --app-build-command "npm run build" \
-            --output-location "dist" \
-            --skip-api-build
+      - name: Deploy to Azure Static Web App
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_CREDENTIALS }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: "src/frontend"
+          api_location: "src/api"
+          output_location: "src/frontend/dist"
 
   # ========================================
   # VALIDATION AND TESTING
