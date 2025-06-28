@@ -77,3 +77,5 @@ GITHUB_SECRETS_SETUP.md
 GITHUB_SETUP_GUIDE.md
 SETUP_FINAL_GITHUB.md
 generate-github-secret.ps1
+
+/DEPLOY_READY.md
