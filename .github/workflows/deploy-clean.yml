@@ -40,6 +40,13 @@ jobs:
         working-directory: ./infra
         run: terraform init
 
+      - name: Import Existing Resources
+        working-directory: ./infra
+        run: |
+          echo "� Importing existing Azure resources to avoid conflicts..."
+          chmod +x import-resources.sh
+          ./import-resources.sh
+
       - name: Terraform Plan (Protected Resources)
         working-directory: ./infra
         run: |
