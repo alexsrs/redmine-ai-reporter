@@ -1,4 +1,33 @@
-name: Deploy to Azure (Smart CI/CD)
+name: Deploy to Azure (Smart CI/CD - Fluxo Otimizado)
+
+# ========================================
+# FLUXO DE DEPLOY INTELIGENTE E OTIMIZADO
+# ========================================
+# FASE 1: DETECÇÃO PARALELA
+#   - detect-changes (detecta o que mudou)
+#   - get-infra-info (obtém nomes dos recursos)
+#   [PARALELO - execução simultânea]
+#
+# FASE 2: DEPLOY INFRAESTRUTURA
+#   - infrastructure (só se infra mudou)
+#   [CONDICIONAL - só executa se necessário]
+#
+# FASE 3: DEPLOY APLICAÇÃO
+#   - deploy-api (só se API mudou)
+#   - deploy-frontend (só se frontend mudou)
+#   [PARALELO - execução simultânea após infra]
+#
+# FASE 4: VALIDAÇÃO
+#   - validate-deployment (após todos os deploys)
+#   [FINAL - só executa se tudo passou]
+#
+# BENEFÍCIOS:
+# ✅ Máxima paralelização possível
+# ✅ Deploy condicional (só o que mudou)
+# ✅ Falha rápida (se infra falhar, para tudo)
+# ✅ Recursos protegidos contra recriação
+# ✅ Zero-cost (FREE tier apenas)
+# ========================================
 
 on:
   push:
@@ -27,7 +56,7 @@ env:
 
 jobs:
   # ========================================
-  # DETECT CHANGES
+  # FASE 1: DETECÇÃO PARALELA (INICIAL)
   # ========================================
   detect-changes:
     name: "Detect What Changed"
@@ -92,9 +121,6 @@ jobs:
             echo "✅ Frontend inalterado"
           fi
 
-  # ========================================
-  # GET INFRASTRUCTURE INFO (ALWAYS)
-  # ========================================
   get-infra-info:
     name: "Get Infrastructure Names"
     runs-on: ubuntu-latest
@@ -123,7 +149,7 @@ jobs:
           echo "✅ Static Web App: redmine-ai-reporter-swa"
 
   # ========================================
-  # TERRAFORM INFRASTRUCTURE (CONDITIONAL)
+  # FASE 2: DEPLOY DE INFRAESTRUTURA (CONDICIONAL)
   # ========================================
   infrastructure:
     name: "Deploy Infrastructure (FREE Tier)"
@@ -196,7 +222,7 @@ jobs:
           echo "🏷️ Project: $(terraform output -raw project_name)"
 
   # ========================================
-  # FUNCTION APP DEPLOYMENT
+  # FASE 3: DEPLOY PARALELO (API + FRONTEND)
   # ========================================
   deploy-api:
     name: "Deploy Function App (API)"
@@ -204,6 +230,7 @@ jobs:
     needs: [detect-changes, get-infra-info, infrastructure]
     if: |
       always() && 
+      (needs.infrastructure.result == 'success' || needs.infrastructure.result == 'skipped') &&
       (needs.detect-changes.outputs.api_changed == 'true' || 
        needs.detect-changes.outputs.force_api == 'true')
     defaults:
@@ -270,9 +297,10 @@ jobs:
   deploy-frontend:
     name: "Deploy Static Web App (Frontend)"
     runs-on: ubuntu-latest
-    needs: [detect-changes, get-infra-info, infrastructure, deploy-api]
+    needs: [detect-changes, get-infra-info, infrastructure]
     if: |
       always() && 
+      (needs.infrastructure.result == 'success' || needs.infrastructure.result == 'skipped') &&
       (needs.detect-changes.outputs.frontend_changed == 'true' || 
        needs.detect-changes.outputs.force_frontend == 'true')
     defaults:
@@ -333,17 +361,18 @@ jobs:
           skip_api_build: true
 
   # ========================================
-  # VALIDATION AND TESTING
+  # FASE 4: VALIDAÇÃO FINAL (APÓS TODOS OS DEPLOYS)
   # ========================================
   validate-deployment:
     name: "Validate Full Deployment"
     runs-on: ubuntu-latest
-    needs: [get-infra-info, infrastructure, deploy-api, deploy-frontend]
+    needs: [detect-changes, get-infra-info, infrastructure, deploy-api, deploy-frontend]
     if: |
       always() && 
-      (needs.infrastructure.result == 'success' || 
-       needs.deploy-api.result == 'success' || 
-       needs.deploy-frontend.result == 'success')
+      (needs.infrastructure.result == 'success' || needs.infrastructure.result == 'skipped') &&
+      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped') &&
+      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
+      (needs.infrastructure.result != 'failure' && needs.deploy-api.result != 'failure' && needs.deploy-frontend.result != 'failure')
 
     steps:
       - name: Azure Login
@@ -383,15 +412,21 @@ jobs:
 
       - name: Resource Summary
         run: |
-          echo "📊 DEPLOYMENT SUMMARY (FREE TIER)"
-          echo "=================================="
+          echo "📊 DEPLOYMENT SUMMARY (FREE TIER) - FLUXO OTIMIZADO"
+          echo "====================================================="
+          echo "✅ FASE 1: Detecção paralela (detect-changes + get-infra-info)"
+          echo "✅ FASE 2: Deploy infraestrutura (condicional)"
+          echo "✅ FASE 3: Deploy API + Frontend (paralelo, condicional)"
+          echo "✅ FASE 4: Validação final (após todos os deploys)"
+          echo ""
           echo "Resource Group: ${{ env.AZURE_RESOURCE_GROUP }}"
           echo "Function App: ${{ needs.get-infra-info.outputs.function_app_name }}"
           echo "Static Web App: ${{ needs.get-infra-info.outputs.static_web_app_name }}"
           echo "Project: ${{ needs.get-infra-info.outputs.project_name }}"
           echo "API URL: https://${{ needs.get-infra-info.outputs.function_app_name }}.azurewebsites.net"
           echo ""
+          echo "🚀 Pipeline inteligente: só deploya o que mudou!"
           echo "💰 All resources using FREE tier"
           echo "🔒 Critical resources PROTECTED against recreation"
           echo "🔑 API Keys preserved in Key Vault"
-          echo "✅ Zero-cost deployment achieved"
+          echo "⚡ Deploy paralelo otimizado"
