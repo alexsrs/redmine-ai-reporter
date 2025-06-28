@@ -1,5 +1,5 @@
 # Teste Simples da API
-$API_URL = "https://redmine-ai-4gs0edzg-func.azurewebsites.net"
+$API_URL = "https://redmine-ai-reporter-func.azurewebsites.net"
 
 Write-Host "Testando Health Check..." -ForegroundColor Cyan
 try {
