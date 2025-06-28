@@ -128,17 +128,34 @@ echo "🔒 Importando Key Vault Access Policies..."
 
 # Obter Object ID da Managed Identity
 if MANAGED_IDENTITY_OBJECT_ID=$(az identity show --name "redmine-ai-reporter-mi" --resource-group "$RESOURCE_GROUP" --query principalId -o tsv 2>/dev/null); then
+    echo "🔍 Managed Identity Object ID: $MANAGED_IDENTITY_OBJECT_ID"
     import_resource "azurerm_key_vault_access_policy.managed_identity" \
         "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv/objectId/$MANAGED_IDENTITY_OBJECT_ID" \
         "Key Vault Access Policy - Managed Identity"
 fi
 
-# Obter Object ID do usuário atual
-CURRENT_USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || echo "")
-if [ ! -z "$CURRENT_USER_OBJECT_ID" ]; then
-    import_resource "azurerm_key_vault_access_policy.github_actions" \
-        "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv/objectId/$CURRENT_USER_OBJECT_ID" \
-        "Key Vault Access Policy - GitHub Actions"
+# Obter Object ID do Service Principal usado no GitHub Actions
+# Vamos tentar obter via az ad sp list primeiro
+SERVICE_PRINCIPAL_OBJECT_ID=""
+if SERVICE_PRINCIPAL_OBJECT_ID=$(az ad sp list --display-name "redmine-ai-reporter-sp" --query "[0].id" -o tsv 2>/dev/null); then
+    if [ ! -z "$SERVICE_PRINCIPAL_OBJECT_ID" ] && [ "$SERVICE_PRINCIPAL_OBJECT_ID" != "null" ]; then
+        echo "🔍 Service Principal Object ID: $SERVICE_PRINCIPAL_OBJECT_ID"
+        import_resource "azurerm_key_vault_access_policy.github_actions" \
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv/objectId/$SERVICE_PRINCIPAL_OBJECT_ID" \
+            "Key Vault Access Policy - GitHub Actions"
+    fi
+fi
+
+# Se não encontrou o service principal, tentar obter o usuário atual
+if [ -z "$SERVICE_PRINCIPAL_OBJECT_ID" ] || [ "$SERVICE_PRINCIPAL_OBJECT_ID" = "null" ]; then
+    echo "⚠️  Service Principal não encontrado, tentando usuário atual..."
+    CURRENT_USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || echo "")
+    if [ ! -z "$CURRENT_USER_OBJECT_ID" ]; then
+        echo "🔍 Current User Object ID: $CURRENT_USER_OBJECT_ID"
+        import_resource "azurerm_key_vault_access_policy.github_actions" \
+            "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/redmine-ai-reporter-kv/objectId/$CURRENT_USER_OBJECT_ID" \
+            "Key Vault Access Policy - GitHub Actions"
+    fi
 fi
 
 # 13. Key Vault Secrets
